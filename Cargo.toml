@@ -1,0 +1,54 @@
+[package]
+name = "caishiji"
+version = "0.1.0"
+edition = "2021"
+description = "采石矶 — a Claude Code-style agentic AI assistant, rewritten in Rust"
+authors = ["Tao-AIcoder"]
+
+[[bin]]
+name = "csj"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+futures = "0.3"
+async-trait = "0.1"
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "stream"] }
+bytes = "1"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# CLI
+clap = { version = "4", features = ["derive", "env"] }
+
+# Error handling
+anyhow = "1"
+thiserror = "1"
+
+# TUI
+ratatui = "0.29"
+crossterm = "0.28"
+
+# Utilities
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5"
+walkdir = "2"
+regex = "1"
+glob = "0.3"
+
+# Config
+toml = "0.8"
+
+# Shell execution
+which = "6"
+
+[profile.release]
+opt-level = 3
+lto = true
