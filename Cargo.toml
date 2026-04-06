@@ -49,6 +49,10 @@ toml = "0.8"
 # Shell execution
 which = "6"
 
+# Logging / tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
 [profile.release]
 opt-level = 3
 lto = true
