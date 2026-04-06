@@ -79,8 +79,67 @@ async fn main() -> Result<()> {
         return Ok(());
     }
 
+    // ── Debug: single-shot query, no TUI ────────────────────────────────
+    if let Some(msg) = cli.print {
+        return debug_query(app_state, msg).await;
+    }
+
     // ── Launch REPL ──────────────────────────────────────────────────────
     tui::run_repl(app_state).await?;
+
+    Ok(())
+}
+
+/// Non-TUI single-shot query for debugging.
+/// Sends one message and prints every SSE event + final response to stdout.
+async fn debug_query(app_state: state::AppState, msg: String) -> Result<()> {
+    use api::types::{ChatRequest, StreamEvent};
+    use messages::{ApiMessage, ContentBlock, Role};
+
+    let provider = api::from_settings(&app_state.settings)?;
+
+    let system_prompt = context::build_system_prompt(
+        &app_state.settings,
+        &app_state.working_dir,
+        &memory::memory_dir(),
+    );
+
+    let request = ChatRequest {
+        model: app_state.settings.provider.model.clone(),
+        max_tokens: app_state.settings.provider.max_tokens,
+        system: system_prompt,
+        messages: vec![ApiMessage {
+            role: Role::User,
+            content: vec![ContentBlock::Text { text: msg }],
+        }],
+        tools: vec![],  // no tools for debug
+        stream: true,
+    };
+
+    let base = app_state.settings.provider.base_url.as_deref().unwrap_or("https://api.anthropic.com");
+    let api_key = app_state.settings.provider.api_key.clone().unwrap_or_default();
+    eprintln!("[debug] POST {}/v1/messages", base);
+    eprintln!("[debug] model: {}", request.model);
+    eprintln!("[debug] request body: {}", serde_json::to_string_pretty(&request).unwrap_or_default());
+
+    // Raw HTTP call to see exact response bytes
+    let client = reqwest::Client::new();
+    let url = format!("{}/v1/messages", base);
+    let resp = client
+        .post(&url)
+        .header("x-api-key", &api_key)
+        .header("anthropic-version", "2023-06-01")
+        .header("content-type", "application/json")
+        .header("User-Agent", "claude-code/1.2.0")
+        .json(&request)
+        .send()
+        .await?;
+
+    eprintln!("[debug] status: {}", resp.status());
+    eprintln!("[debug] headers: {:#?}", resp.headers());
+
+    let body = resp.text().await?;
+    eprintln!("[debug] raw body (first 2000 chars):\n{}", &body[..body.len().min(2000)]);
 
     Ok(())
 }

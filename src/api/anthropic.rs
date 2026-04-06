@@ -93,7 +93,9 @@ impl LLMProvider for AnthropicProvider {
 /// Parse a single SSE text line into a StreamEvent.
 /// Returns None for comment lines, empty lines, and `[DONE]`.
 fn parse_sse_line(line: &str) -> Option<Result<StreamEvent>> {
-    let data = line.strip_prefix("data: ")?;
+    // Handle both "data: {}" (Anthropic) and "data:{}" (Qwen/DashScope)
+    let data = line.strip_prefix("data: ")
+        .or_else(|| line.strip_prefix("data:"))?;
     if data.trim() == "[DONE]" {
         return None;
     }

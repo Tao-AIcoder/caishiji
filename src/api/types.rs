@@ -65,6 +65,15 @@ pub struct MessageStartData {
 pub enum ContentBlockStart {
     Text { text: String },
     ToolUse { id: String, name: String },
+    /// Qwen extended thinking block
+    Thinking {
+        #[serde(default)]
+        thinking: String,
+        #[serde(default)]
+        signature: String,
+    },
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -72,6 +81,18 @@ pub enum ContentBlockStart {
 pub enum ContentBlockDelta {
     TextDelta { text: String },
     InputJsonDelta { partial_json: String },
+    /// Qwen extended thinking delta
+    ThinkingDelta {
+        #[serde(default)]
+        thinking: String,
+    },
+    /// Qwen signature delta (end of thinking)
+    SignatureDelta {
+        #[serde(default)]
+        signature: String,
+    },
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Debug, Clone, Deserialize)]

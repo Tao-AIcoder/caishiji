@@ -121,6 +121,9 @@ pub async fn run_query(params: QueryParams<'_>) -> Result<QueryResult> {
                         ContentBlockStart::ToolUse { id, name } => {
                             tool_use_blocks.push((index, id, name, String::new()));
                         }
+                        // Thinking blocks (Qwen extended thinking) — skip content
+                        ContentBlockStart::Thinking { .. } | ContentBlockStart::Unknown => {
+                        }
                     }
                 }
                 StreamEvent::ContentBlockDelta { index, delta } => {
@@ -140,6 +143,10 @@ pub async fn run_query(params: QueryParams<'_>) -> Result<QueryResult> {
                                 buf.push_str(&partial_json);
                             }
                         }
+                        // Thinking/signature deltas (Qwen) — ignore
+                        ContentBlockDelta::ThinkingDelta { .. }
+                        | ContentBlockDelta::SignatureDelta { .. }
+                        | ContentBlockDelta::Unknown => {}
                     }
                 }
                 StreamEvent::MessageDelta { delta, usage } => {

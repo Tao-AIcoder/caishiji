@@ -38,6 +38,10 @@ pub struct Cli {
     #[arg(long, hide = true)]
     pub dump_system_prompt: bool,
 
+    /// Send a single message and print raw response (no TUI, for debugging)
+    #[arg(long, value_name = "MESSAGE")]
+    pub print: Option<String>,
+
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
