@@ -53,6 +53,7 @@ impl LLMProvider for AnthropicProvider {
             .header("x-api-key", &self.api_key)
             .header("anthropic-version", "2023-06-01")
             .header("content-type", "application/json")
+            .header("User-Agent", "claude-code/1.2.0")
             .json(&request)
             .send()
             .await
