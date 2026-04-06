@@ -27,17 +27,19 @@ pub enum PermissionMode {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderConfig {
-    /// Provider name: "anthropic" | "openai" | "ollama"
+    #[serde(default = "default_provider_name")]
     pub name: String,
-    /// API base URL (override to use proxies or local models)
     pub base_url: Option<String>,
-    /// API key (can also be set via env var CAISHIJI_API_KEY)
     pub api_key: Option<String>,
-    /// Model identifier
+    #[serde(default = "default_model")]
     pub model: String,
-    /// Max output tokens
+    #[serde(default = "default_max_tokens")]
     pub max_tokens: u32,
 }
+
+fn default_provider_name() -> String { "anthropic".to_string() }
+fn default_model() -> String { "claude-sonnet-4-6".to_string() }
+fn default_max_tokens() -> u32 { 8192 }
 
 impl Default for ProviderConfig {
     fn default() -> Self {
@@ -55,15 +57,19 @@ impl Default for ProviderConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
+    #[serde(default)]
     pub provider: ProviderConfig,
+    #[serde(default)]
     pub permission_mode: PermissionMode,
-    /// Working directories beyond cwd that tools may access
+    #[serde(default)]
     pub allowed_dirs: Vec<PathBuf>,
-    /// Whether to show token/cost in status bar
+    #[serde(default = "default_show_cost")]
     pub show_cost: bool,
-    /// Shell used by BashTool (default: /bin/bash)
+    #[serde(default = "default_shell")]
     pub shell: String,
 }
+
+fn default_show_cost() -> bool { true }
 
 impl Default for Settings {
     fn default() -> Self {
