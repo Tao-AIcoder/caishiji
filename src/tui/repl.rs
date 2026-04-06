@@ -153,6 +153,9 @@ async fn repl_loop(
                             continue; // Ignore submit while processing
                         }
 
+                        // Capture history BEFORE pushing user message or placeholder
+                        let history = app_state.api_messages();
+
                         app_state.last_error = None;
                         app_state.is_loading = true;
                         app_state.push_message(Message::user_text(&text));
@@ -161,9 +164,6 @@ async fn repl_loop(
                             vec![ContentBlock::Text { text: String::new() }],
                             Default::default(),
                         ));
-
-                        // Spawn async query task
-                        let history = app_state.api_messages();
                         let system_prompt = build_system_prompt(
                             &app_state.settings,
                             &app_state.working_dir,
@@ -229,15 +229,15 @@ async fn run_query_task(
 
     let callbacks = QueryCallbacks {
         on_text: Some(Box::new(move |chunk: &str| {
-            let _ = tx_text.blocking_send(QueryEvent::TextChunk(chunk.to_string()));
+            let _ = tx_text.try_send(QueryEvent::TextChunk(chunk.to_string()));
         })),
         on_tool_start: Some(Box::new(move |name: &str, _id: &str| {
-            let _ = tx_tool_start.blocking_send(QueryEvent::ToolStart {
+            let _ = tx_tool_start.try_send(QueryEvent::ToolStart {
                 name: name.to_string(),
             });
         })),
         on_tool_done: Some(Box::new(move |_id: &str, is_error: bool| {
-            let _ = tx_tool_done.blocking_send(QueryEvent::ToolDone { is_error });
+            let _ = tx_tool_done.try_send(QueryEvent::ToolDone { is_error });
         })),
     };
 
